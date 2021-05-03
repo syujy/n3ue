@@ -1,17 +1,19 @@
-module test
+module n3ue
 
 go 1.14
 
 require (
-	bitbucket.org/free5gc-team/CommonConsumerTestData v0.0.0-20200915043355-a64a571128d3
-	bitbucket.org/free5gc-team/UeauCommon v0.0.0-20200915045754-fc6808262820
-	bitbucket.org/free5gc-team/milenage v0.0.0-20200915034446-e87f555990e5
-	bitbucket.org/free5gc-team/n3iwf v0.0.0-20201012032248-b0b630a27f51
-	bitbucket.org/free5gc-team/nas v0.0.0-20201008065117-fa581c1b3560
-	bitbucket.org/free5gc-team/openapi v0.0.0-20200915035203-9fc3f0e748b4
-	github.com/calee0219/fatal v0.0.1
-	github.com/go-ping/ping v0.0.0-20201008161548-5f9dc3248bce
-	github.com/stretchr/testify v1.6.1
-	github.com/vishvananda/netlink v1.1.0
-	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d
+	bitbucket.org/_syujy/ike v0.0.0-20210421080347-07163b4d28db
+	github.com/antonfisher/nested-logrus-formatter v1.3.1
+	github.com/jonboulle/clockwork v0.2.2 // indirect
+	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+	github.com/lestrrat-go/strftime v1.0.4 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
+	github.com/sirupsen/logrus v1.8.1
+	github.com/urfave/cli/v2 v2.3.0
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
+	gopkg.in/yaml.v2 v2.3.0
 )
+
+replace bitbucket.org/_syujy/ike => ../ike

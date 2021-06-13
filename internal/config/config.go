@@ -26,8 +26,16 @@ type Info struct {
 }
 
 type Configuration struct {
-	IKEBindAddress string `yaml:"IKEServiceIP"`
-	N3IWFAddress   L4Addr `yaml:"N3IWFAddress"`
+	IKEBindAddress string         `yaml:"IKEServiceBindIP"`
+	N3IWFAddress   L4Addr         `yaml:"N3IWFAddress"`
+	IPsecIf        IPSecInterface `yaml:"IPSecInterface"`
+	SUPI           string         `yaml:"SUPI"`
+	Nssai          *NSSAI         `yaml:"NSSAI"`
+	UeAmbr         *UEAMBR        `yaml:"UEAMBR"`
+	Auth           AuthData       `yaml:"Auth"`
+	ServingPLMNID  string         `yaml:"ServingPLMN"`
+	CipheringAlgo  string         `yaml:"CipherAlgo"`
+	IntegrityAlgo  string         `yaml:"IntegrityAlgo"`
 }
 
 type Log struct {
@@ -39,6 +47,35 @@ type Log struct {
 type L4Addr struct {
 	IP   string `yaml:"IP"`
 	Port int    `yaml:"Port"`
+}
+
+type IPSecInterface struct {
+	Name string  `yaml:"Name"`
+	Mark *uint32 `yaml:"Mark"`
+}
+
+type NSSAI struct {
+	DefaultSNSSAIs []*SNSSAI `yaml:"DefaultSNSSAIs"`
+	SNSSAIs        []*SNSSAI `yaml:"SNSSAIs"`
+}
+
+type SNSSAI struct {
+	SST int    `yaml:"SST"`
+	SD  string `yaml:"SD"`
+}
+
+type UEAMBR struct {
+	Uplink   string `yaml:"Uplink"`
+	Downlink string `yaml:"Downlink"`
+}
+
+type AuthData struct {
+	AuthMethod string `yaml:"AuthMethod"`
+	K          string `yaml:"K"`
+	OPC        string `yaml:"OPC"`
+	OP         string `yaml:"OP"`
+	AMF        string `yaml:"AMF"`
+	SQNFile    string `yaml:"SQNFile"` // 48-bit integer in hex format
 }
 
 func (c *Config) ReadConfigFile(path string) error {

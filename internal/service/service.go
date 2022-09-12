@@ -9,8 +9,12 @@ import (
 	"n3ue/internal/config"
 	"n3ue/internal/ike"
 	"n3ue/internal/n3ue_exclusive"
+	"n3ue/internal/nas"
 	"n3ue/internal/projenv"
+	"n3ue/internal/sessInterface"
+	"n3ue/internal/task_manager"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
@@ -22,7 +26,13 @@ func Start(configPath string, runMode string) error {
 	if err := n3ue.start(); err != nil {
 		return err
 	}
-	n3ue.registration()
+	n3ue.initSess()
+	if s := n3ue.registration(); s == task_manager.Failed {
+		return errors.New("Run registration failed")
+	}
+	if s := n3ue.pduSessionEstablishment(); s == task_manager.Failed {
+		return errors.New("Run PDU session establishment failed")
+	}
 	n3ue.signalHandler()
 	return nil
 }
@@ -31,8 +41,13 @@ type N3UE struct {
 	c       *config.Config
 	runMode string
 	n3ue_exclusive.N3UECommon
+	// Log
+	log *logrus.Entry
 	// Services
 	ikeService *ike.IKEService
+	// Sessions
+	ikeSess *ike.Session
+	nasSess *nas.Session
 }
 
 func (e *N3UE) init(configPath string, runMode string) error {
@@ -71,6 +86,7 @@ func (e *N3UE) start() error {
 	// Set N3UE log as specified in context
 	e.Log.SetLogLevel(e.Ctx.Log.DebugLevel)
 	e.Log.SetReportCaller(e.Ctx.Log.ReportCaller)
+	e.log = e.Log.WithFields(logrus.Fields{"component": "N3UE", "category": "UE"})
 
 	// Task Manager
 	if err := e.InitTaskManager(100, 20); err != nil {
@@ -116,6 +132,14 @@ func (e *N3UE) signalHandler() {
 }
 
 func (e *N3UE) stop() {
+	// Stop NAS session
+	if err := e.nasSess.SessionStopHard(); err != nil {
+		e.log.Errorf("Delete NAS session failed: %+v", err)
+	}
+	// Stop IKE session
+	if err := e.ikeSess.SessionStopHard(); err != nil {
+		e.log.Errorf("Delete IKE session failed: %+v", err)
+	}
 	// Remove pid file
 	if err := os.Remove(projenv.PidFile); err != nil {
 		fmt.Println(err)
@@ -128,12 +152,29 @@ func (e *N3UE) reload() {
 	fmt.Println("Handle SIGHUP") // temp
 }
 
-func (e *N3UE) registration() {
-	ikeSess := new(ike.Session)
-	ikeSess.Init(e.N3UECommon, e.ikeService)
-	taskIKE_SA_INIT := ike.NewTask()
-	taskIKE_SA_INIT.PushFunc(ikeSess.IKE_SA_INIT)
-	e.TM.NewTask(taskIKE_SA_INIT)
-	s := taskIKE_SA_INIT.GetStatus()
-	fmt.Printf("Task status: %d\n", s)
+func (e *N3UE) initSess() {
+	si1 := make(chan *sessInterface.SessInt, 10)
+	si2 := make(chan *sessInterface.SessInt, 10)
+	e.ikeSess = new(ike.Session)
+	e.ikeSess.Init(e.N3UECommon, e.ikeService, si1, si2)
+	e.nasSess = new(nas.Session)
+	e.nasSess.Init(e.N3UECommon, si2, si1)
+}
+
+func (e *N3UE) registration() int {
+	ikeTask := ike.NewTask()
+	ikeTask.PushFunc(e.ikeSess.IKE_SA_INIT)
+	ikeTask.PushFunc(e.ikeSess.IKE_AUTH)
+	nasTask := nas.NewTask()
+	nasTask.PushFunc(e.nasSess.RegistrationRequest)
+	e.TM.NewTask(ikeTask)
+	e.TM.NewTask(nasTask)
+	return nasTask.GetStatus()
+}
+
+func (e *N3UE) pduSessionEstablishment() int {
+	nasTask := nas.NewTask()
+	nasTask.PushFunc(e.nasSess.PDUSessionEstablishmentRequest)
+	e.TM.NewTask(nasTask)
+	return nasTask.GetStatus()
 }

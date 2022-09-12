@@ -1,4 +1,4 @@
-package ike
+package nas
 
 import (
 	"context"
@@ -12,14 +12,8 @@ type task struct {
 	status chan int
 	cb     []func(*task) int
 	// Parameters
-	ctx           context.Context
-	timerInterval int
+	ctx context.Context
 	// Context
-	// For IKE AUTH
-	initiatorSignedOctets []byte
-	responderSignedOctets []byte
-	// Key gen
-	ninr []byte
 }
 
 func NewTask() *task {

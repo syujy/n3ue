@@ -15,17 +15,17 @@ import (
 type IKEService struct {
 	n3ue_exclusive.N3UECommon
 	log *logrus.Entry
-	// socket handler
+	// Socket handler
 	socketHandler500  *socketHandler
 	socketHandler4500 *socketHandler
-	// dispatcher
+	// Dispatcher
 	packetDispatcher *dispatcher
 }
 
 func (s *IKEService) Init(c n3ue_exclusive.N3UECommon) {
-	// set n3ue common
+	// Set n3ue common
 	s.N3UECommon = c
-	// init logger
+	// Init logger
 	s.log = s.Log.WithFields(logrus.Fields{"component": "N3UE", "category": "IKEService"})
 }
 
@@ -52,45 +52,43 @@ func (s *IKEService) Run() error {
 	if file, err := udpConnPort4500.File(); err != nil {
 		return fmt.Errorf("Setting UDP encap flag failed: %+v", err)
 	} else {
-		err = unix.SetsockoptInt(int(file.Fd()), unix.IPPROTO_UDP, types.OPT_UDP_ENCAP, types.OPTVAL_UDP_ENCAP_ESPINUDP)
-		if err != nil {
+		if err = unix.SetsockoptInt(int(file.Fd()), unix.IPPROTO_UDP, types.OPT_UDP_ENCAP, types.OPTVAL_UDP_ENCAP_ESPINUDP); err != nil {
 			return fmt.Errorf("Set socket options failed: %+v", err)
 		}
-		err = file.Close()
-		if err != nil {
+		if err = file.Close(); err != nil {
 			return fmt.Errorf("Close socket file failed: %+v", err)
 		}
 	}
 
 	// Chan
-	shInputChan := make(chan *packet, 10000)
-	shOutputChan500 := make(chan *packet, 10000)
-	shOutputChan4500 := make(chan *packet, 10000)
-	saOutputChan := make(chan *packet, 10000)
-	// socket handler
+	shPacketIn := make(chan *packet, 10000)
+	shPacketOut500 := make(chan *packet, 10000)
+	shPacketOut4500 := make(chan *packet, 10000)
+	saPacketOut := make(chan *packet, 10000)
+	// Socket handler
 	s.socketHandler500 = &socketHandler{
-		log:        s.log,
-		conn:       udpConnPort500,
-		port:       500,
-		inputChan:  shInputChan,
-		outputChan: shOutputChan500,
+		log:       s.log,
+		conn:      udpConnPort500,
+		port:      500,
+		packetIn:  shPacketIn,
+		packetOut: shPacketOut500,
 	}
 	s.socketHandler500.run()
 	s.socketHandler4500 = &socketHandler{
-		log:        s.log,
-		conn:       udpConnPort4500,
-		port:       4500,
-		inputChan:  shInputChan,
-		outputChan: shOutputChan4500,
+		log:       s.log,
+		conn:      udpConnPort4500,
+		port:      4500,
+		packetIn:  shPacketIn,
+		packetOut: shPacketOut4500,
 	}
 	s.socketHandler4500.run()
-	// dispatcher
+	// Dispatcher
 	s.packetDispatcher = &dispatcher{
-		log:              s.log,
-		shInputChan:      shInputChan,
-		shOutputChan500:  shOutputChan500,
-		shOutputChan4500: shOutputChan4500,
-		saOutputChan:     saOutputChan,
+		log:             s.log,
+		shPacketIn:      shPacketIn,
+		shPacketOut500:  shPacketOut500,
+		shPacketOut4500: shPacketOut4500,
+		saPacketOut:     saPacketOut,
 	}
 	s.packetDispatcher.run()
 
@@ -104,11 +102,11 @@ type packet struct {
 }
 
 type socketHandler struct {
-	log        *logrus.Entry
-	conn       *net.UDPConn
-	port       uint16
-	inputChan  chan *packet
-	outputChan chan *packet
+	log       *logrus.Entry
+	conn      *net.UDPConn
+	port      uint16
+	packetIn  chan *packet
+	packetOut chan *packet
 }
 
 func (sh *socketHandler) run() {
@@ -133,16 +131,16 @@ func (sh *socketHandler) reader() {
 		p.Payload = make([]byte, n)
 		copy(p.Payload, data[:n])
 
-		sh.inputChan <- p
+		sh.packetIn <- p
 	}
 }
 
 func (sh *socketHandler) writer() {
 	for {
-		p := <-sh.outputChan
+		p := <-sh.packetOut
 		n, err := sh.conn.WriteToUDP(p.Payload, p.RemoteAddr)
 		if err != nil {
-			sh.log.Error(err)
+			sh.log.Errorf("WriteToUDP failed: %+v", err)
 			return
 		}
 		if n != len(p.Payload) {
@@ -154,13 +152,14 @@ func (sh *socketHandler) writer() {
 
 type dispatcher struct {
 	log *logrus.Entry
-	// socket handler
-	shInputChan      chan *packet
-	shOutputChan500  chan *packet
-	shOutputChan4500 chan *packet
+	// Socket handler
+	shPacketIn      chan *packet
+	shPacketOut500  chan *packet
+	shPacketOut4500 chan *packet
 	// IKESA
-	saInputChan  sync.Map // map[uint64]chan *packet
-	saOutputChan chan *packet
+	saReqPacketIn sync.Map // map[uint64]chan *packet
+	saResPacketIn sync.Map // map[uint64]chan *packet
+	saPacketOut   chan *packet
 }
 
 func (d *dispatcher) run() {
@@ -170,7 +169,7 @@ func (d *dispatcher) run() {
 
 func (d *dispatcher) inputDispatcher() {
 	for {
-		p := <-d.shInputChan
+		p := <-d.shPacketIn
 		if p.LocalPort == 4500 {
 			if !isAllZero(p.Payload[0:4]) {
 				d.log.Warn(
@@ -180,7 +179,7 @@ func (d *dispatcher) inputDispatcher() {
 			}
 			p.Payload = p.Payload[4:]
 		}
-		// get flag
+		// Get flag
 		if len(p.Payload) < 28 {
 			d.log.Warn("Received UDP packet that doesn't follow IKE format. Drop.")
 			continue
@@ -192,41 +191,60 @@ func (d *dispatcher) inputDispatcher() {
 		} else {
 			spi = binary.BigEndian.Uint64(p.Payload[8:16])
 		}
-
-		iChan, ok := d.saInputChan.Load(spi)
-		if !ok {
-			iChan, _ = d.saInputChan.Load(0)
+		flagR := p.Payload[19] & types.ResponseBitCheck
+		var iChan chan *packet
+		if flagR == 0 {
+			if ch, ok := d.saReqPacketIn.Load(spi); ok {
+				iChan = ch.(chan *packet)
+			} else {
+				if ch, ok := d.saReqPacketIn.Load(0); ok {
+					iChan = ch.(chan *packet)
+				}
+			}
+		} else {
+			if ch, ok := d.saResPacketIn.Load(spi); ok {
+				iChan = ch.(chan *packet)
+			}
 		}
-		if iChan.(chan *packet) != nil { // if nil, drop
-			iChan.(chan *packet) <- p
+		// Packet in
+		if iChan != nil { // if nil, drop
+			iChan <- p
 		}
 	}
 }
 
 func (d *dispatcher) outputDispatcher() {
 	for {
-		p := <-d.saOutputChan
+		p := <-d.saPacketOut
 		if p.LocalPort == 4500 {
-			// prepend 4 bytes zero
+			// Prepend 4 bytes zero
 			prependZero := make([]byte, 4)
 			p.Payload = append(prependZero, p.Payload...)
-			d.shOutputChan4500 <- p
+			d.shPacketOut4500 <- p
 		} else {
-			d.shOutputChan500 <- p
+			d.shPacketOut500 <- p
 		}
 	}
 }
 
-func (d *dispatcher) registerSAInputChan(localSPI uint64, iChan chan *packet) {
-	d.saInputChan.Store(localSPI, iChan)
+func (d *dispatcher) registerReqReadChan(localSPI uint64, iChan chan *packet) {
+	d.saReqPacketIn.Store(localSPI, iChan)
 }
 
-func (d *dispatcher) deregisterSAInputChan(localSPI uint64) {
-	d.saInputChan.Delete(localSPI)
+func (d *dispatcher) deregisterReqReadChan(localSPI uint64) {
+	d.saReqPacketIn.Delete(localSPI)
+}
+
+func (d *dispatcher) registerResReadChan(localSPI uint64, iChan chan *packet) {
+	d.saResPacketIn.Store(localSPI, iChan)
+}
+
+func (d *dispatcher) deregisterResReadChan(localSPI uint64) {
+	d.saResPacketIn.Delete(localSPI)
 }
 
 func (d *dispatcher) send(p *packet) {
-	d.saOutputChan <- p
+	d.saPacketOut <- p
 }
 
 func isAllZero(b []byte) bool {

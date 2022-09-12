@@ -78,8 +78,6 @@ func runStartCmd(c *cli.Context) error {
 			newArgs = append(newArgs, arg)
 		}
 		cmd := exec.Command(newArgs[0], newArgs[1:]...)
-		cmd.Stdout = os.Stdout // temp
-		cmd.Stderr = os.Stderr // temp
 		if err := cmd.Start(); err != nil {
 			return err
 		}

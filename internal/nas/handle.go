@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"n3ue/internal/task_manager"
+	"github.com/syujy/n3ue/internal/task_manager"
 	"net"
 
-	"bitbucket.org/free5gc-team/milenage"
-	"bitbucket.org/free5gc-team/nas"
-	"bitbucket.org/free5gc-team/nas/nasConvert"
-	"bitbucket.org/free5gc-team/nas/nasMessage"
-	"bitbucket.org/free5gc-team/nas/security"
+	"github.com/free5gc/milenage"
+	"github.com/free5gc/nas"
+	"github.com/free5gc/nas/nasConvert"
+	"github.com/free5gc/nas/nasMessage"
+	"github.com/free5gc/nas/security"
 	"github.com/vishvananda/netlink"
 )
 

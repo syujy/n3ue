@@ -3,9 +3,9 @@ package lib_test
 import (
 	"testing"
 
-	"n3ue/internal/nas/lib"
+	"github.com/syujy/n3ue/internal/nas/lib"
 
-	"bitbucket.org/free5gc-team/nas/nasType"
+	"github.com/free5gc/nas/nasType"
 	"github.com/stretchr/testify/assert"
 )
 

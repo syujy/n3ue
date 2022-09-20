@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"math/bits"
 
-	"bitbucket.org/free5gc-team/nas/nasMessage"
-	"bitbucket.org/free5gc-team/nas/nasType"
+	"github.com/free5gc/nas/nasMessage"
+	"github.com/free5gc/nas/nasType"
 )
 
 // Only Support Supi imsi-xxxxxxxxxxx format

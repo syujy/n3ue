@@ -1,7 +1,7 @@
 package nas
 
 import (
-	"n3ue/internal/n3ue_exclusive"
+	"github.com/syujy/n3ue/internal/n3ue_exclusive"
 	"net"
 
 	"github.com/sirupsen/logrus"

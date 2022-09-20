@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"bitbucket.org/free5gc-team/nas"
-	"bitbucket.org/free5gc-team/nas/security"
+	"github.com/free5gc/nas"
+	"github.com/free5gc/nas/security"
 )
 
 func (s *Session) NASEncode(msg *nas.Message, securityContextAvailable bool, newSecurityContext bool) ([]byte, error) {

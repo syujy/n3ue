@@ -2,7 +2,7 @@ package ike
 
 import (
 	"context"
-	"n3ue/internal/task_manager"
+	"github.com/syujy/n3ue/internal/task_manager"
 )
 
 var _ task_manager.Task = &task{}

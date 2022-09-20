@@ -2,14 +2,14 @@ package nas
 
 import (
 	"context"
-	"n3ue/internal/eap5g"
-	"n3ue/internal/sessInterface"
-	"n3ue/internal/task_manager"
+	"github.com/syujy/n3ue/internal/eap5g"
+	"github.com/syujy/n3ue/internal/sessInterface"
+	"github.com/syujy/n3ue/internal/task_manager"
 	"net"
 	"time"
 
-	"bitbucket.org/free5gc-team/nas/nasMessage"
-	"bitbucket.org/free5gc-team/openapi/models"
+	"github.com/free5gc/nas/nasMessage"
+	"github.com/free5gc/openapi/models"
 )
 
 func (s *Session) RegistrationRequest(t *task) int {

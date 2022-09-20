@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"n3ue/internal/projenv"
-	"n3ue/internal/service"
+	"github.com/syujy/n3ue/internal/projenv"
+	"github.com/syujy/n3ue/internal/service"
 
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"

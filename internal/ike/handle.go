@@ -5,14 +5,14 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"n3ue/internal/sessInterface"
-	"n3ue/internal/task_manager"
+	"github.com/syujy/n3ue/internal/sessInterface"
+	"github.com/syujy/n3ue/internal/task_manager"
 	"net"
 	"time"
 
-	"bitbucket.org/_syujy/ike/message"
-	"bitbucket.org/_syujy/ike/security"
-	"bitbucket.org/_syujy/ike/types"
+	"github.com/syujy/ikev2/message"
+	"github.com/syujy/ikev2/security"
+	"github.com/syujy/ikev2/types"
 	"github.com/vishvananda/netlink"
 )
 

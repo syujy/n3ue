@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"n3ue/internal/config"
-	"n3ue/internal/projenv"
+	"github.com/syujy/n3ue/internal/config"
+	"github.com/syujy/n3ue/internal/projenv"
 	"net"
 	"strconv"
 

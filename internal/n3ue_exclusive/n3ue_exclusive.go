@@ -2,10 +2,10 @@ package n3ue_exclusive
 
 import (
 	"errors"
-	"n3ue/internal/config"
-	"n3ue/internal/context"
-	"n3ue/internal/logger"
-	"n3ue/internal/task_manager"
+	"github.com/syujy/n3ue/internal/config"
+	"github.com/syujy/n3ue/internal/context"
+	"github.com/syujy/n3ue/internal/logger"
+	"github.com/syujy/n3ue/internal/task_manager"
 )
 
 type N3UECommon struct {

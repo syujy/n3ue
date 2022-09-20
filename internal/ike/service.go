@@ -3,11 +3,11 @@ package ike
 import (
 	"encoding/binary"
 	"fmt"
-	"n3ue/internal/n3ue_exclusive"
+	"github.com/syujy/n3ue/internal/n3ue_exclusive"
 	"net"
 	"sync"
 
-	"bitbucket.org/_syujy/ike/types"
+	"github.com/syujy/ikev2/types"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )

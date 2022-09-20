@@ -5,12 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"n3ue/internal/nas/lib"
+	"github.com/syujy/n3ue/internal/nas/lib"
 
-	"bitbucket.org/free5gc-team/nas"
-	"bitbucket.org/free5gc-team/nas/nasMessage"
-	"bitbucket.org/free5gc-team/nas/nasType"
-	"bitbucket.org/free5gc-team/openapi/models"
+	"github.com/free5gc/nas"
+	"github.com/free5gc/nas/nasMessage"
+	"github.com/free5gc/nas/nasType"
+	"github.com/free5gc/openapi/models"
 )
 
 const (
@@ -148,11 +148,10 @@ func (s *Session) GetUlNasTransport_PduSessionEstablishmentRequest(pduSessionId 
 	ulNasTransport.RequestType.SetIei(nasMessage.ULNASTransportRequestTypeType)
 	ulNasTransport.RequestType.SetRequestTypeValue(requestType)
 	if dnnString != "" {
-		dnn := []byte(dnnString)
 		ulNasTransport.DNN = new(nasType.DNN)
 		ulNasTransport.DNN.SetIei(nasMessage.ULNASTransportDNNType)
-		ulNasTransport.DNN.SetLen(uint8(len(dnn)))
-		ulNasTransport.DNN.SetDNN(dnn)
+		ulNasTransport.DNN.SetLen(uint8(len(dnnString)))
+		ulNasTransport.DNN.SetDNN(dnnString)
 	}
 	if sNssai != nil {
 		var sdTemp [3]uint8
@@ -192,11 +191,10 @@ func (s *Session) GetUlNasTransport_PduSessionModificationRequest(pduSessionId u
 	ulNasTransport.RequestType.SetIei(nasMessage.ULNASTransportRequestTypeType)
 	ulNasTransport.RequestType.SetRequestTypeValue(requestType)
 	if dnnString != "" {
-		dnn := []byte(dnnString)
 		ulNasTransport.DNN = new(nasType.DNN)
 		ulNasTransport.DNN.SetIei(nasMessage.ULNASTransportDNNType)
-		ulNasTransport.DNN.SetLen(uint8(len(dnn)))
-		ulNasTransport.DNN.SetDNN(dnn)
+		ulNasTransport.DNN.SetLen(uint8(len(dnnString)))
+		ulNasTransport.DNN.SetDNN(dnnString)
 	}
 	if sNssai != nil {
 		var sdTemp [3]uint8
@@ -914,11 +912,10 @@ func (s *Session) GetUlNasTransport_PduSessionReleaseCommand(pduSessionId uint8,
 	ulNasTransport.RequestType.SetIei(nasMessage.ULNASTransportRequestTypeType)
 	ulNasTransport.RequestType.SetRequestTypeValue(requestType)
 	if dnnString != "" {
-		dnn := []byte(dnnString)
 		ulNasTransport.DNN = new(nasType.DNN)
 		ulNasTransport.DNN.SetIei(nasMessage.ULNASTransportDNNType)
-		ulNasTransport.DNN.SetLen(uint8(len(dnn)))
-		ulNasTransport.DNN.SetDNN(dnn)
+		ulNasTransport.DNN.SetLen(uint8(len(dnnString)))
+		ulNasTransport.DNN.SetDNN(dnnString)
 	}
 	if sNssai != nil {
 		var sdTemp [3]uint8

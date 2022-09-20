@@ -3,11 +3,11 @@ package ike
 import (
 	"context"
 	"fmt"
-	"n3ue/internal/n3ue_exclusive"
-	"n3ue/internal/sessInterface"
+	"github.com/syujy/n3ue/internal/n3ue_exclusive"
+	"github.com/syujy/n3ue/internal/sessInterface"
 	"net"
 
-	"bitbucket.org/_syujy/ike/security"
+	"github.com/syujy/ikev2/security"
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 )
